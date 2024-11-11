@@ -1,0 +1,340 @@
+Create a project-maven
+add 5 packages (features/pages/runner/stepDefinition/utility)-- src/test/java
+runner= TestRunner
+utility=BrowserDriver
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+POM.XML
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.example</groupId>
+    <artifactId>SeleniumCucumberWebDriverManager</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <allure.version>2.25.0</allure.version>
+        <aspectj.version>1.9.21</aspectj.version>
+
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-bom</artifactId>
+                <version>${allure.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>5.10.1</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
+    <dependencies>
+        <!-- https://mvnrepository.com/artifact/io.cucumber/cucumber-java -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-java</artifactId>
+            <version>6.11.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/io.cucumber/cucumber-core -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-core</artifactId>
+            <version>6.11.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/io.cucumber/cucumber-junit -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-junit</artifactId>
+            <version>6.11.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>4.17.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.bonigarcia</groupId>
+            <artifactId>webdrivermanager</artifactId>
+            <version>5.7.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/io.qameta.allure/allure-junit4 -->
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-junit4</artifactId>
+            <version>2.24.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/io.qameta.allure/allure-cucumber7-jvm -->
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-cucumber6-jvm</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <testFailureIgnore>false</testFailureIgnore>
+                    <argLine>
+                        -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
+                        -Dcucumber.options="--plugin io.qameta.allure.cucumber6jvm.AllureCucumber6Jvm"
+                    </argLine>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjweaver</artifactId>
+                        <version>${aspectj.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+
+
+
+
+
+--------------------------------------------------------------------------------------
+
+Utility-Browser Driver
+package utility;
+
+import org.openqa.selenium.WebDriver;
+
+public class BrowserDriver {
+
+    public static WebDriver driver;
+
+}
+----------------------------------------------------------------------------------------
+runner-TestRunner
+
+package runner;
+
+import io.cucumber.junit.Cucumber;
+import io.cucumber.junit.CucumberOptions;
+import org.junit.runner.RunWith;
+
+@RunWith(Cucumber.class)
+@CucumberOptions(
+        features = "src/test/java/features",
+        glue = {"utility", "stepDefinition" },
+        plugin = {"io.qameta.allure.cucumber6jvm.AllureCucumber6Jvm" }
+)
+public class TestRunner {
+
+}
+-------------------------------------------------------------------------------------------
+Pages-Homepage
+package pages;
+
+import io.github.bonigarcia.wdm.WebDriverManager;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import utility.BrowserDriver;
+
+import java.time.Duration;
+
+import static org.junit.Assert.assertEquals;
+
+public class HomePage extends BrowserDriver {
+    public static String ideabits_menu_icon_xpath = "/html/body/div[2]/div/header/nav/div/div/button";
+    public static String ideabits_AboutUs_txt = "About Us";
+    public static String ideabits_Services_txt = "Services";
+    private static WebDriverWait wait;
+
+    // Initialize the driver and wait in a static initializer block
+    static {
+        WebDriverManager.chromedriver().setup();
+        driver = new ChromeDriver();
+        wait = new WebDriverWait(driver, Duration.ofSeconds(10)); // 10-second timeout
+    }
+
+    public static void Ideabits_menu_icon_xpath() {
+        driver.get("https://www.ideabits.se");
+
+        // Wait for the menu icon to be clickable and then click it
+        WebElement menuIcon = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(ideabits_menu_icon_xpath)));
+        menuIcon.click();
+    }
+
+    public static void Ideabits_AboutUs_linkText() {
+        // Wait for the "About Us" link to be clickable and then click it
+        WebElement aboutUsLink = wait.until(ExpectedConditions.elementToBeClickable(By.linkText(ideabits_AboutUs_txt)));
+        aboutUsLink.click();
+    }
+
+    public static void Ideabits_Services_linkText() {
+        // Wait for the "Services" link to be clickable and then click it
+        WebElement servicesLink = wait.until(ExpectedConditions.elementToBeClickable(By.linkText(ideabits_Services_txt)));
+        servicesLink.click();
+    }
+
+    // Tear down method to close the browser after tests
+    public static void tearDown() {
+        if (driver != null) {
+            driver.quit();
+        }
+    }
+}
+----------------------------------------------
+letsTalkpage
+package pages;
+
+import io.cucumber.java.bs.I;
+import org.openqa.selenium.By;
+import utility.BrowserDriver;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
+public class letsTalk extends BrowserDriver {
+    static WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+    public static String ideabits_LetsTalk_Button_xpath = "//*[@id=\"root\"]/div/header/nav/div/button";
+    public static String ideabits_SayHi ="//*[@id=\"section\"]/div[1]/form/div[1]/h3";
+    public static String full_Name_xpath ="//*[@id=\"section\"]/div[1]/form/div[2]/input[1]";
+    public static String email_Xpath ="//*[@id=\"section\"]/div[1]/form/div[2]/input[2]";
+    public static String brief_xpath = "//*[@id=\"section\"]/div[1]/form/div[2]/textarea";
+    public static String get_BackToYou_Xpath = "//*[@id=\"section\"]/div[1]/form/div[2]/button";
+
+
+    public static void click_LetsTalk(){
+        WebElement letsTalkButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(ideabits_LetsTalk_Button_xpath)));
+        letsTalkButton.click();
+    }
+
+   public static void visibility_SayHi() {
+       WebElement visibilitySayHi = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(ideabits_SayHi)));
+       visibilitySayHi.click();
+   }
+
+    public static void sendkeys_FullName() {
+        driver.findElement(By.xpath(full_Name_xpath)).sendKeys("Dilini Senevirathne");
+    }
+
+    public static void sendkeys_Email() {
+        driver.findElement(By.xpath(email_Xpath)).sendKeys("dilini@gamil.com");
+    }
+    public static void sendkeys_Brief() {
+        driver.findElement(By.xpath(brief_xpath)).sendKeys("Can I get more information about your services...");
+    }
+
+    public static void click_GetBackToYou(){
+        WebElement clcikGetBackToYou = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(get_BackToYou_Xpath)));
+        clcikGetBackToYou.click();
+    }
+}
+----------------------------------------------------------------------------------------------------------------
+StepDefinition-home
+package stepDefinition;
+
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+
+import static pages.HomePage.*;
+
+public class HomePage {
+
+
+    @Given("User navigate to the home page")
+
+    public void User_navigate_to_the_home_page() {
+
+        Ideabits_menu_icon_xpath();
+        Ideabits_AboutUs_linkText();
+    }
+
+    @When("User click on menu icon")
+
+    public void User_click_on_menu_icon() {
+
+        Ideabits_menu_icon_xpath();
+        Ideabits_AboutUs_linkText();
+    }
+
+    @Then("User able to view the menu items")
+    public void User_able_to_view_the_menu_items(){
+        Ideabits_AboutUs_linkText();
+        Ideabits_Services_linkText();
+    }
+
+
+
+}
+-----------------------------------------------------
+LetsTalk
+package stepDefinition;
+
+import io.cucumber.java.bs.I;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import static pages.letsTalk.*;
+
+public class letsTalk {
+
+    @When("User click on LetsTalk button")
+
+    public void User_click_on_LetsTalk_button(){
+        click_LetsTalk();
+    }
+    @Then("User able to view the client details form")
+
+    public void User_able_to_view_the_client_details_form(){
+        visibility_SayHi();
+    }
+
+    @Given("User able to view the data form")
+    public void User_able_to_view_the_data_form(){
+        visibility_SayHi();
+    }
+
+    @When("User enter the details")
+    public void User_enter_the_details(){
+        sendkeys_FullName();
+        sendkeys_Email();
+        sendkeys_Brief();
+    }
+    @Then("User able to click the get back to you button")
+    public void User_able_to_click_the_get_back_to_you_button() throws InterruptedException{
+        click_GetBackToYou();
+    }
+
+}
